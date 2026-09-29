@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 const NAV_LINKS = [
   { href: "#story", emoji: "📖", label: "Our Story" },
@@ -13,6 +14,8 @@ const NAV_LINKS = [
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeHref, setActiveHref] = useState(null);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -20,7 +23,7 @@ export default function Header() {
 
   useEffect(() => {
     const onResize = () => {
-      if (window.innerWidth > 720) setOpen(false);
+      if (window.innerWidth >= 1024) setOpen(false);
     };
     const onKeyDown = (e) => {
       if (e.key === "Escape") setOpen(false);
@@ -33,10 +36,49 @@ export default function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const elements = NAV_LINKS.map((link) =>
+      document.getElementById(link.href.slice(1))
+    ).filter(Boolean);
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveHref(`#${entry.target.id}`);
+          }
+        });
+      },
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <header className="sticky top-0 z-[100] border-b border-blue/[0.08] bg-white/90 backdrop-blur-md">
+    <header
+      className={`sticky top-0 z-[100] border-b transition-all duration-300 ${
+        scrolled
+          ? "border-blue/[0.1] bg-white/95 shadow-[0_8px_24px_rgba(0,40,120,0.08)] backdrop-blur-xl"
+          : "border-blue/[0.08] bg-white/90 backdrop-blur-md"
+      }`}
+    >
       <div className="mx-auto flex h-[72px] w-full max-w-[1160px] items-center justify-between px-6">
-        <a href="#top" className="shrink-0">
+        <motion.a
+          href="#top"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          className="shrink-0"
+        >
           <Image
             src="/assets/logo.png"
             alt="Leng Yang Ice Cream & Tea"
@@ -45,15 +87,15 @@ export default function Header() {
             priority
             className="h-10 w-auto"
           />
-        </a>
+        </motion.a>
 
         <nav
           className={`main-nav fixed inset-y-0 right-0 z-[90] flex h-[100dvh] w-[min(78vw,320px)] origin-top-right flex-col items-stretch gap-1 overflow-hidden rounded-l-[28px] px-7 pb-8 pt-24 shadow-[-18px_0_40px_rgba(0,20,80,0.35)] transition-transform duration-500 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]
             bg-[radial-gradient(circle_at_90%_8%,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0)_40%),radial-gradient(circle_at_0%_95%,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0)_45%),linear-gradient(160deg,#0066FF_0%,#002a66_100%)]
             ${open ? "translate-x-0 rotate-0 open" : "translate-x-full rotate-2"}
-            md:static md:h-auto md:w-auto md:translate-x-0 md:rotate-0 md:flex-row md:items-center md:gap-7 md:rounded-none md:bg-none md:p-0 md:shadow-none md:overflow-visible`}
+            lg:static lg:h-auto lg:w-auto lg:translate-x-0 lg:rotate-0 lg:flex-row lg:items-center lg:gap-1.5 lg:rounded-none lg:bg-none lg:p-0 lg:shadow-none lg:overflow-visible`}
         >
-          <div className="mb-[18px] flex items-center gap-2.5 border-b border-white/20 pb-4 md:hidden">
+          <div className="mb-[18px] flex items-center gap-2.5 border-b border-white/20 pb-4 lg:hidden">
             <Image
               src="/assets/mascot.png"
               alt=""
@@ -66,33 +108,48 @@ export default function Header() {
             </span>
           </div>
 
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 rounded-2xl px-3 py-3.5 font-display text-[17px] font-semibold text-white transition hover:translate-x-1 hover:scale-[1.02] hover:bg-white/[0.12] active:translate-x-1 active:scale-[1.02] active:bg-white/[0.12] md:w-auto md:gap-0 md:rounded-none md:px-0 md:py-1.5 md:font-body md:text-[15px] md:font-semibold md:text-ink md:transition-colors md:hover:translate-x-0 md:hover:scale-100 md:hover:bg-transparent md:hover:text-blue"
-            >
-              <span className="text-xl leading-none md:hidden">{link.emoji}</span>
-              {link.label}
-            </a>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const isActive = activeHref === link.href;
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className={`relative flex items-center gap-3 rounded-2xl px-3 py-3.5 font-display text-[17px] font-semibold text-white transition hover:translate-x-1 hover:scale-[1.02] hover:bg-white/[0.12] active:translate-x-1 active:scale-[1.02] active:bg-white/[0.12] lg:w-auto lg:gap-0 lg:rounded-full lg:px-4 lg:py-2 lg:font-body lg:text-[15px] lg:font-semibold lg:transition-colors lg:hover:translate-x-0 lg:hover:scale-100 lg:hover:bg-blue/[0.06] lg:hover:text-blue ${
+                  isActive ? "lg:text-blue" : "lg:text-ink"
+                }`}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="nav-active-pill"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    className="absolute inset-0 -z-10 hidden rounded-full bg-blue/10 lg:block"
+                  />
+                )}
+                <span className="text-xl leading-none lg:hidden">{link.emoji}</span>
+                {link.label}
+              </a>
+            );
+          })}
 
-          <a
+          <motion.a
             href="#order"
             onClick={() => setOpen(false)}
-            className="mt-3.5 flex items-center justify-center gap-3 rounded-2xl bg-white px-3 py-3.5 font-display text-[17px] font-semibold text-blue shadow-[0_8px_20px_rgba(0,0,0,0.25)] transition hover:scale-[1.04] md:mt-0 md:justify-start md:rounded-full md:bg-blue md:px-5 md:py-2.5 md:font-body md:text-[15px] md:text-white md:shadow-[0_6px_16px_rgba(0,102,255,0.35)] md:hover:scale-100 md:hover:bg-blue-dark"
+            whileHover={{ scale: 1.05, y: -1 }}
+            whileTap={{ scale: 0.96 }}
+            className="mt-3.5 flex items-center justify-center gap-2 rounded-2xl bg-white px-3 py-3.5 font-display text-[17px] font-semibold text-blue shadow-[0_8px_20px_rgba(0,0,0,0.25)] lg:mt-0 lg:ml-2 lg:justify-start lg:rounded-full lg:bg-blue lg:px-5 lg:py-2.5 lg:font-body lg:text-[15px] lg:text-white lg:shadow-[0_6px_16px_rgba(0,102,255,0.35)] lg:hover:shadow-[0_10px_22px_rgba(0,102,255,0.45)]"
           >
-            <span className="text-xl leading-none md:hidden">🛒</span>
+            <span className="text-xl leading-none lg:hidden">🛒</span>
+            <span className="hidden text-base leading-none lg:inline">🧋</span>
             Order Now
-          </a>
+          </motion.a>
 
           <Image
             src="/assets/mascot.png"
             alt=""
             width={683}
             height={936}
-            className="pointer-events-none absolute -bottom-[30px] -right-10 hidden w-[200px] rotate-[-8deg] opacity-[0.12] max-md:block"
+            className="pointer-events-none absolute -bottom-[30px] -right-10 hidden w-[200px] rotate-[-8deg] opacity-[0.12] max-lg:block"
           />
         </nav>
 
@@ -101,7 +158,7 @@ export default function Header() {
           aria-label="Toggle navigation"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="relative z-[95] flex h-10 w-10 flex-col items-center justify-center gap-[5px] md:hidden"
+          className="relative z-[95] flex h-10 w-10 flex-col items-center justify-center gap-[5px] lg:hidden"
         >
           <span
             className={`block h-[3px] w-full rounded-sm bg-blue transition-transform duration-300 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)] ${
@@ -124,7 +181,7 @@ export default function Header() {
       <div
         onClick={() => setOpen(false)}
         aria-hidden="true"
-        className={`fixed inset-0 z-[85] bg-[rgba(4,16,48,0.45)] backdrop-blur-[2px] transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 z-[85] bg-[rgba(4,16,48,0.45)] backdrop-blur-[2px] transition-opacity duration-300 lg:hidden ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
