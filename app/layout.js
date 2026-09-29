@@ -1,5 +1,8 @@
 import { Baloo_2, Poppins } from "next/font/google";
 import "./globals.css";
+import SmoothScroll from "@/components/SmoothScroll";
+import ScrollProgress from "@/components/ScrollProgress";
+import BackToTop from "@/components/BackToTop";
 
 const baloo = Baloo_2({
   subsets: ["latin"],
@@ -27,7 +30,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${baloo.variable} ${poppins.variable}`}>
-      <body className="bg-bg font-body text-ink">{children}</body>
+      <body className="bg-bg font-body text-ink">
+        <ScrollProgress />
+        <SmoothScroll />
+        {children}
+        <BackToTop />
+      </body>
     </html>
   );
 }
