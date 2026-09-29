@@ -41,11 +41,11 @@ export default function RewardsCarousel() {
 
   return (
     <div className="mx-auto max-w-[560px]">
-      <div className="relative min-h-[260px] rounded-brand bg-gradient-to-br from-bg-soft to-white shadow-brand">
+      <div className="glass-card relative min-h-[300px] rounded-brand sm:min-h-[260px]">
         {SLIDES.map((slide, i) => (
           <div
             key={slide.title}
-            className={`absolute inset-0 flex flex-col items-center justify-center px-8 py-10 text-center transition-[opacity,transform] duration-500 ${
+            className={`absolute inset-0 flex flex-col items-center justify-center px-6 py-8 text-center transition-[opacity,transform] duration-500 sm:px-8 sm:py-10 ${
               i === current
                 ? "pointer-events-auto opacity-100 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]"
                 : "pointer-events-none translate-x-6 scale-[0.97] opacity-0"
